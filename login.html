@@ -1,9 +1,10 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
 
 <meta charset="UTF-8">
-<title>User Login</title>
+<title>Login User</title>
 
 <style>
 
@@ -18,7 +19,7 @@ height:100vh;
 }
 
 .container{
-width:350px;
+width:360px;
 background:#1f2937;
 padding:30px;
 border-radius:15px;
@@ -41,6 +42,7 @@ background:#2563eb;
 color:white;
 border-radius:8px;
 cursor:pointer;
+font-weight:bold;
 }
 
 .switch{
@@ -54,7 +56,7 @@ color:#60a5fa;
 position:absolute;
 top:20px;
 right:20px;
-font-size:28px;
+font-size:26px;
 cursor:pointer;
 }
 
@@ -64,7 +66,7 @@ cursor:pointer;
 
 <body>
 
-<div class="inbox" onclick="lihatInbox()">📥</div>
+<div class="inbox" onclick="location.href='inbox.html'">📥</div>
 
 <div class="container">
 
@@ -136,26 +138,36 @@ mode === "signup" ? "block" : "none";
 
 window.proses = async function(){
 
-const username = document.getElementById("username").value;
-const email = document.getElementById("email").value;
+const username = document.getElementById("username").value.trim();
+const email = document.getElementById("email").value.trim();
 const password = document.getElementById("password").value;
 const confirm = document.getElementById("confirm").value;
 
+try{
+
 if(mode === "signup"){
+
+if(!username || !email || !password){
+alert("Semua field harus diisi");
+return;
+}
 
 if(password !== confirm){
 alert("Password tidak sama");
 return;
 }
 
-const user = await createUserWithEmailAndPassword(auth,email,password);
+const userCredential =
+await createUserWithEmailAndPassword(auth,email,password);
 
 await set(ref(db,"users/"+username),{
-uid:user.user.uid,
+uid:userCredential.user.uid,
 email:email
 });
 
-alert("Signup berhasil");
+alert("Signup berhasil!");
+
+location.href="index.html";
 
 }
 
@@ -170,27 +182,19 @@ return;
 
 const data = snapshot.val();
 
-try{
-
 await signInWithEmailAndPassword(auth,data.email,password);
 
 alert("Login berhasil");
 
 location.href="index.html";
 
-}catch{
-
-alert("Password salah");
-
 }
 
-}
+}catch(error){
+
+alert(error.message);
 
 }
-
-window.lihatInbox = function(){
-
-location.href="inbox.html";
 
 }
 
@@ -198,3 +202,4 @@ location.href="inbox.html";
 
 </body>
 </html>
+```
