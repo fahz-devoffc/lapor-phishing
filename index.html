@@ -14,7 +14,7 @@ color:white;
 }
 
 .container{
-max-width:800px;
+max-width:900px;
 margin:auto;
 padding:40px;
 }
@@ -22,7 +22,6 @@ padding:40px;
 .title{
 font-size:34px;
 font-weight:bold;
-margin-bottom:10px;
 }
 
 .subtitle{
@@ -46,7 +45,6 @@ border-radius:10px;
 padding:15px;
 color:white;
 resize:none;
-font-size:14px;
 }
 
 button{
@@ -58,16 +56,6 @@ background:#2563eb;
 color:white;
 cursor:pointer;
 font-weight:600;
-transition:0.3s;
-}
-
-button:hover{
-background:#3b82f6;
-transform:scale(1.05);
-}
-
-.reports{
-margin-top:30px;
 }
 
 .report{
@@ -75,23 +63,15 @@ background:#1f2937;
 padding:15px;
 border-radius:10px;
 margin-top:10px;
-animation:fade .3s ease;
 }
 
 .time{
 font-size:12px;
 opacity:0.6;
-margin-top:5px;
 }
 
-@keyframes fade{
-from{opacity:0;transform:translateY(10px);}
-to{opacity:1;transform:translateY(0);}
-}
-
-.stats{
-margin-top:20px;
-opacity:0.8;
+.section{
+margin-top:40px;
 }
 
 </style>
@@ -103,23 +83,36 @@ opacity:0.8;
 <div class="container">
 
 <div class="title">🚨 Lapor Korban Phishing</div>
-<div class="subtitle">Laporkan kronologi kejadian phishing secara realtime</div>
+<div class="subtitle">Laporkan kronologi kejadian phishing</div>
 
 <div class="card">
 
 <label>Kronologi Kejadian</label>
 
-<textarea id="kronologi" placeholder="Contoh: Saya menerima link login bank palsu melalui WhatsApp..."></textarea>
+<textarea id="kronologi" placeholder="Tuliskan kronologi phishing..."></textarea>
 
 <button onclick="kirim()">Kirim Laporan</button>
 
 </div>
 
-<div class="stats">
-Total laporan masuk: <b id="total">0</b>
+
+<div class="section">
+
+<h2>📥 Laporan Terkumpul (Pending)</h2>
+
+<div id="pendingReports"></div>
+
 </div>
 
-<div class="reports" id="reports"></div>
+
+<div class="section">
+
+<h2>✅ Laporan Selesai</h2>
+
+<div id="doneReports"></div>
+
+</div>
+
 
 </div>
 
@@ -145,8 +138,6 @@ const db = getDatabase(app);
 
 const reportsRef = ref(db,"reports");
 
-let total = 0;
-
 window.kirim = function(){
 
 const kronologi = document.getElementById("kronologi").value;
@@ -155,22 +146,20 @@ if(!kronologi) return;
 
 push(reportsRef,{
 kronologi:kronologi,
-time:new Date().toLocaleString()
+time:new Date().toLocaleString(),
+status:"pending"
 });
 
 document.getElementById("kronologi").value="";
 
 }
 
-const reportsDiv = document.getElementById("reports");
+const pendingDiv = document.getElementById("pendingReports");
+const doneDiv = document.getElementById("doneReports");
 
 onChildAdded(reportsRef,(snapshot)=>{
 
 const data = snapshot.val();
-
-total++;
-
-document.getElementById("total").innerText = total;
 
 const div = document.createElement("div");
 
@@ -181,7 +170,15 @@ div.innerHTML = `
 <div class="time">${data.time}</div>
 `;
 
-reportsDiv.prepend(div);
+if(data.status === "done"){
+
+doneDiv.prepend(div);
+
+}else{
+
+pendingDiv.prepend(div);
+
+}
 
 });
 
