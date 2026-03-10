@@ -1,1 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Lapor Korban Phishing</title>
 
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+}
+
+.container{
+max-width:800px;
+margin:auto;
+padding:40px;
+}
+
+.title{
+font-size:34px;
+font-weight:bold;
+margin-bottom:10px;
+}
+
+.subtitle{
+opacity:.7;
+margin-bottom:30px;
+}
+
+.card{
+background:#111827;
+padding:25px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
+textarea{
+width:100%;
+height:120px;
+background:#0f172a;
+border:none;
+border-radius:10px;
+padding:15px;
+color:white;
+resize:none;
+font-size:14px;
+}
+
+button{
+margin-top:15px;
+padding:12px 25px;
+border:none;
+border-radius:10px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+font-weight:600;
+transition:0.3s;
+}
+
+button:hover{
+background:#3b82f6;
+transform:scale(1.05);
+}
+
+.reports{
+margin-top:30px;
+}
+
+.report{
+background:#1f2937;
+padding:15px;
+border-radius:10px;
+margin-top:10px;
+animation:fade .3s ease;
+}
+
+.time{
+font-size:12px;
+opacity:0.6;
+margin-top:5px;
+}
+
+@keyframes fade{
+from{opacity:0;transform:translateY(10px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+.stats{
+margin-top:20px;
+opacity:0.8;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="title">🚨 Lapor Korban Phishing</div>
+<div class="subtitle">Laporkan kronologi kejadian phishing secara realtime</div>
+
+<div class="card">
+
+<label>Kronologi Kejadian</label>
+
+<textarea id="kronologi" placeholder="Contoh: Saya menerima link login bank palsu melalui WhatsApp..."></textarea>
+
+<button onclick="kirim()">Kirim Laporan</button>
+
+</div>
+
+<div class="stats">
+Total laporan masuk: <b id="total">0</b>
+</div>
+
+<div class="reports" id="reports"></div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAG4qda-B8j2k6nOl6krNgRqc7VIDgbPqs",
+  authDomain: "phishing-report-21e2c.firebaseapp.com",
+  databaseURL: "https://phishing-report-21e2c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "phishing-report-21e2c",
+  storageBucket: "phishing-report-21e2c.firebasestorage.app",
+  messagingSenderId: "276758713826",
+  appId: "1:276758713826:web:945436655ff290283655bb",
+  measurementId: "G-13GQ33JGWL"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const reportsRef = ref(db,"reports");
+
+let total = 0;
+
+window.kirim = function(){
+
+const kronologi = document.getElementById("kronologi").value;
+
+if(!kronologi) return;
+
+push(reportsRef,{
+kronologi:kronologi,
+time:new Date().toLocaleString()
+});
+
+document.getElementById("kronologi").value="";
+
+}
+
+const reportsDiv = document.getElementById("reports");
+
+onChildAdded(reportsRef,(snapshot)=>{
+
+const data = snapshot.val();
+
+total++;
+
+document.getElementById("total").innerText = total;
+
+const div = document.createElement("div");
+
+div.className="report";
+
+div.innerHTML = `
+<div>${data.kronologi}</div>
+<div class="time">${data.time}</div>
+`;
+
+reportsDiv.prepend(div);
+
+});
+
+</script>
+
+</body>
+</html>
