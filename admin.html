@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <title>Admin Dashboard</title>
 
 <style>
@@ -12,6 +13,11 @@ color:white;
 padding:40px;
 }
 
+.title{
+font-size:32px;
+margin-bottom:30px;
+}
+
 .card{
 background:#1f2937;
 padding:15px;
@@ -19,13 +25,30 @@ border-radius:10px;
 margin-top:10px;
 }
 
+.time{
+font-size:12px;
+opacity:0.6;
+margin-top:5px;
+}
+
 button{
-background:#22c55e;
+margin-top:10px;
+margin-right:10px;
+padding:8px 14px;
 border:none;
-padding:8px 15px;
 border-radius:8px;
-color:white;
 cursor:pointer;
+font-weight:600;
+}
+
+.done{
+background:#22c55e;
+color:white;
+}
+
+.delete{
+background:#ef4444;
+color:white;
 }
 
 </style>
@@ -34,22 +57,25 @@ cursor:pointer;
 
 <body>
 
-<h1>Admin Dashboard</h1>
+<div class="title">Admin Dashboard - Laporan Phishing</div>
 
-<h2>Laporan Pending</h2>
+<h2>📥 Laporan Pending</h2>
 
 <div id="reports"></div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyAG4qda-B8j2k6nOl6krNgRqc7VIDgbPqs",
-authDomain: "phishing-report-21e2c.firebaseapp.com",
-databaseURL: "https://phishing-report-21e2c-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId: "phishing-report-21e2c"
+  apiKey: "AIzaSyAG4qda-B8j2k6nOl6krNgRqc7VIDgbPqs",
+  authDomain: "phishing-report-21e2c.firebaseapp.com",
+  databaseURL: "https://phishing-report-21e2c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "phishing-report-21e2c",
+  storageBucket: "phishing-report-21e2c.firebasestorage.app",
+  messagingSenderId: "276758713826",
+  appId: "1:276758713826:web:945436655ff290283655bb"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -65,13 +91,16 @@ const id = snapshot.key;
 if(data.status === "done") return;
 
 const div = document.createElement("div");
+
 div.className="card";
 
 div.innerHTML = `
-<p>${data.kronologi}</p>
-<small>${data.time}</small>
-<br><br>
-<button onclick="selesaikan('${id}')">Tandai Selesai</button>
+<div>${data.kronologi}</div>
+<div class="time">${data.time}</div>
+
+<button class="done" onclick="selesaikan('${id}')">Tandai Selesai</button>
+
+<button class="delete" onclick="hapus('${id}')">Hapus Laporan</button>
 `;
 
 document.getElementById("reports").prepend(div);
@@ -87,6 +116,18 @@ status:"done"
 });
 
 alert("Laporan ditandai selesai");
+
+}
+
+window.hapus = function(id){
+
+if(!confirm("Yakin ingin menghapus laporan ini?")) return;
+
+const reportRef = ref(db,"reports/"+id);
+
+remove(reportRef);
+
+alert("Laporan berhasil dihapus");
 
 }
 
