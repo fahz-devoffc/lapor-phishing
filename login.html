@@ -52,21 +52,11 @@ cursor:pointer;
 color:#60a5fa;
 }
 
-.inbox{
-position:absolute;
-top:20px;
-right:20px;
-font-size:26px;
-cursor:pointer;
-}
-
 </style>
 
 </head>
 
 <body>
-
-<div class="inbox" onclick="location.href='inbox.html'">📥</div>
 
 <div class="container">
 
@@ -121,7 +111,6 @@ const db = getDatabase(app);
 
 let mode = "signin";
 
-
 window.toggle = function(){
 
 mode = mode === "signin" ? "signup" : "signin";
@@ -146,10 +135,6 @@ const password = document.getElementById("password").value;
 const confirm = document.getElementById("confirm").value;
 
 try{
-
-/* ======================
-   SIGNUP
-====================== */
 
 if(mode === "signup"){
 
@@ -178,9 +163,7 @@ location.href="index.html";
 
 }
 
-/* ======================
-   SIGNIN
-====================== */
+/* LOGIN */
 
 else{
 
@@ -194,15 +177,54 @@ return;
 const data = snapshot.val();
 
 if(data.blocked === true){
-alert("Akun anda telah diblokir oleh admin");
+alert("Akun anda telah diblokir admin");
 return;
 }
 
+/* LOGIN REQUEST */
+
+const reqSnap = await get(child(ref(db),"loginRequests/"+username));
+
+if(!reqSnap.exists()){
+
+const ok = confirm("Silahkan minta Accept Admin untuk memperbolehkan anda masuk");
+
+if(!ok) return;
+
+await set(ref(db,"loginRequests/"+username),{
+time:Date.now(),
+approved:false
+});
+
+alert("Izin Request dikirim, tunggu");
+
+return;
+
+}
+
+const reqData = reqSnap.val();
+
+if(reqData.approved === true){
+
 await signInWithEmailAndPassword(auth,data.email,password);
 
-alert("Login berhasil");
+location.href="index.html";
+return;
+
+}
+
+/* AUTO APPROVE 2 MENIT */
+
+if(Date.now() - reqData.time > 120000){
+
+await signInWithEmailAndPassword(auth,data.email,password);
 
 location.href="index.html";
+return;
+
+}
+
+alert("Menunggu persetujuan admin");
 
 }
 
