@@ -1,1 +1,128 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>User Database</title>
+
+<style>
+
+body{
+font-family:Segoe UI;
+background:#0f172a;
+color:white;
+padding:40px;
+}
+
+.user{
+background:#1f2937;
+padding:15px;
+border-radius:10px;
+margin-bottom:10px;
+}
+
+button{
+margin-top:8px;
+padding:8px 14px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.block{
+background:#dc2626;
+color:white;
+}
+
+.unblock{
+background:#16a34a;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>User Terdaftar</h1>
+
+<div id="users"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+import {
+getDatabase,
+ref,
+onValue,
+update
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+
+const firebaseConfig = {
+apiKey: "AIzaSyAG4qda-B8j2k6nOl6krNgRqc7VIDgbPqs",
+authDomain: "phishing-report-21e2c.firebaseapp.com",
+databaseURL: "https://phishing-report-21e2c-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "phishing-report-21e2c",
+storageBucket: "phishing-report-21e2c.firebasestorage.app",
+messagingSenderId: "276758713826",
+appId: "1:276758713826:web:945436655ff290283655bb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const usersRef = ref(db,"users");
+
+const container = document.getElementById("users");
+
+onValue(usersRef,(snapshot)=>{
+
+container.innerHTML="";
+
+snapshot.forEach(child=>{
+
+const username = child.key;
+const data = child.val();
+
+const div = document.createElement("div");
+
+div.className="user";
+
+const blocked = data.blocked === true;
+
+div.innerHTML = `
+<b>${username}</b><br>
+Email: ${data.email}<br>
+Status: ${blocked ? "🚫 Blocked" : "✅ Active"}<br>
+`;
+
+const btn = document.createElement("button");
+
+btn.innerText = blocked ? "Unblock" : "Block";
+
+btn.className = blocked ? "unblock" : "block";
+
+btn.onclick = function(){
+
+update(ref(db,"users/"+username),{
+blocked:!blocked
+});
+
+};
+
+div.appendChild(btn);
+
+container.appendChild(div);
+
+});
+
+});
+
+</script>
+
+</body>
+</html>
+
