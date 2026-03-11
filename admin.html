@@ -1,7 +1,9 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
+<meta charset="UTF-8">
 <title>Admin Dashboard</title>
 
 <style>
@@ -10,85 +12,89 @@ body{
 font-family:Segoe UI;
 background:#0f172a;
 color:white;
-padding:40px;
+margin:0;
+padding:20px;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.dashboard{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+gap:20px;
 }
 
 .card{
 background:#1f2937;
 padding:20px;
 border-radius:12px;
-margin-bottom:20px;
 }
 
 .report{
-background:#111827;
-padding:15px;
-border-radius:10px;
-margin-top:10px;
+padding:10px;
+border-bottom:1px solid #333;
+margin-bottom:10px;
 }
 
 button{
-padding:8px 14px;
+margin-top:5px;
+margin-right:5px;
+padding:6px 10px;
 border:none;
-border-radius:8px;
+border-radius:6px;
 cursor:pointer;
-margin-right:6px;
-margin-top:6px;
 }
 
 .done{
-background:#16a34a;
+background:#22c55e;
 color:white;
 }
 
 .delete{
-background:#dc2626;
+background:#ef4444;
 color:white;
 }
 
-.nav{
+.topbar{
+display:flex;
+justify-content:space-between;
 margin-bottom:20px;
 }
 
-.nav button{
-background:#2563eb;
-color:white;
+a{
+color:#60a5fa;
+text-decoration:none;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<script>
-
-const token = prompt("Masukkan Admin Token");
-
-if(token !== "admintoken"){
-alert("Token salah");
-location.href="index.html";
-}
-
-</script>
-
+<div class="topbar">
 <h1>Admin Dashboard</h1>
-
-<div class="nav">
-<button onclick="location.href='data.html'">User</button>
-<button onclick="location.href='index.html'">Home</button>
+<a href="data.html">User</a>
 </div>
 
-<div class="card">
+<div class="dashboard">
 
-<h2>📥 Laporan Pending</h2>
+<div class="card">
+<h2>Laporan Pending</h2>
 <div id="pending"></div>
-
 </div>
 
 <div class="card">
-
-<h2>✅ Laporan Selesai</h2>
+<h2>Laporan Selesai</h2>
 <div id="done"></div>
+</div>
+
+<div class="card">
+<h2>🔐 Login Request</h2>
+<div id="requests"></div>
+</div>
 
 </div>
 
@@ -104,6 +110,14 @@ update,
 remove
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+const token = prompt("Masukkan Admin Token");
+
+if(token !== "admintoken"){
+alert("Token salah");
+location.href="index.html";
+}
+
+/* FIREBASE CONFIG */
 
 const firebaseConfig = {
 apiKey: "AIzaSyAG4qda-B8j2k6nOl6krNgRqc7VIDgbPqs",
@@ -118,12 +132,16 @@ appId: "1:276758713826:web:945436655ff290283655bb"
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const reportsRef = ref(db,"reports");
+/* =========================
+   LAPORAN
+========================= */
+
+const reportRef = ref(db,"reports");
 
 const pendingDiv = document.getElementById("pending");
 const doneDiv = document.getElementById("done");
 
-onValue(reportsRef,(snapshot)=>{
+onValue(reportRef,(snapshot)=>{
 
 pendingDiv.innerHTML="";
 doneDiv.innerHTML="";
@@ -134,21 +152,24 @@ const id = child.key;
 const data = child.val();
 
 const div = document.createElement("div");
-
 div.className="report";
 
 div.innerHTML = `
-<div>${data.kronologi}</div>
-<small>${data.time}</small>
+<b>${data.username || "Anonim"}</b><br>
+${data.kronologi}
 `;
 
-if(data.status === "pending"){
+if(data.status === "done"){
+
+doneDiv.appendChild(div);
+
+}else{
 
 const doneBtn = document.createElement("button");
-doneBtn.innerText="Selesaikan";
+doneBtn.innerText="Terima";
 doneBtn.className="done";
 
-doneBtn.onclick = function(){
+doneBtn.onclick=function(){
 
 update(ref(db,"reports/"+id),{
 status:"done"
@@ -156,40 +177,68 @@ status:"done"
 
 };
 
-const deleteBtn = document.createElement("button");
-deleteBtn.innerText="Hapus";
-deleteBtn.className="delete";
+const delBtn = document.createElement("button");
+delBtn.innerText="Hapus";
+delBtn.className="delete";
 
-deleteBtn.onclick = function(){
+delBtn.onclick=function(){
 
 remove(ref(db,"reports/"+id));
 
 };
 
 div.appendChild(doneBtn);
-div.appendChild(deleteBtn);
+div.appendChild(delBtn);
 
 pendingDiv.appendChild(div);
 
 }
 
-else{
+});
 
-const deleteBtn = document.createElement("button");
-deleteBtn.innerText="Hapus";
-deleteBtn.className="delete";
+});
 
-deleteBtn.onclick = function(){
+/* =========================
+   LOGIN REQUEST
+========================= */
 
-remove(ref(db,"reports/"+id));
+const requestRef = ref(db,"loginRequests");
+const requestDiv = document.getElementById("requests");
+
+onValue(requestRef,(snapshot)=>{
+
+requestDiv.innerHTML="";
+
+snapshot.forEach(child=>{
+
+const username = child.key;
+const data = child.val();
+
+if(data.approved === true) return;
+
+const div = document.createElement("div");
+div.className="report";
+
+div.innerHTML=`
+<b>${username}</b><br>
+Meminta izin login
+`;
+
+const btn = document.createElement("button");
+btn.innerText="Terima";
+btn.className="done";
+
+btn.onclick=function(){
+
+update(ref(db,"loginRequests/"+username),{
+approved:true
+});
 
 };
 
-div.appendChild(deleteBtn);
+div.appendChild(btn);
 
-doneDiv.appendChild(div);
-
-}
+requestDiv.appendChild(div);
 
 });
 
