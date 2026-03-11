@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Login User</title>
+<title>User Login</title>
 
 <style>
 
@@ -121,6 +121,7 @@ const db = getDatabase(app);
 
 let mode = "signin";
 
+
 window.toggle = function(){
 
 mode = mode === "signin" ? "signup" : "signin";
@@ -136,6 +137,7 @@ mode === "signup" ? "block" : "none";
 
 }
 
+
 window.proses = async function(){
 
 const username = document.getElementById("username").value.trim();
@@ -144,6 +146,10 @@ const password = document.getElementById("password").value;
 const confirm = document.getElementById("confirm").value;
 
 try{
+
+/* ======================
+   SIGNUP
+====================== */
 
 if(mode === "signup"){
 
@@ -162,7 +168,8 @@ await createUserWithEmailAndPassword(auth,email,password);
 
 await set(ref(db,"users/"+username),{
 uid:userCredential.user.uid,
-email:email
+email:email,
+blocked:false
 });
 
 alert("Signup berhasil!");
@@ -170,6 +177,10 @@ alert("Signup berhasil!");
 location.href="index.html";
 
 }
+
+/* ======================
+   SIGNIN
+====================== */
 
 else{
 
@@ -181,6 +192,11 @@ return;
 }
 
 const data = snapshot.val();
+
+if(data.blocked === true){
+alert("Akun anda telah diblokir oleh admin");
+return;
+}
 
 await signInWithEmailAndPassword(auth,data.email,password);
 
