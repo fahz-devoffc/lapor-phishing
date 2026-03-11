@@ -1,7 +1,7 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <title>Admin Dashboard</title>
 
 <style>
@@ -13,69 +13,106 @@ color:white;
 padding:40px;
 }
 
-.title{
-font-size:32px;
-margin-bottom:30px;
-}
-
 .card{
 background:#1f2937;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+}
+
+.report{
+background:#111827;
 padding:15px;
 border-radius:10px;
 margin-top:10px;
 }
 
-.time{
-font-size:12px;
-opacity:0.6;
-margin-top:5px;
-}
-
 button{
-margin-top:10px;
-margin-right:10px;
 padding:8px 14px;
 border:none;
 border-radius:8px;
 cursor:pointer;
-font-weight:600;
+margin-right:6px;
+margin-top:6px;
 }
 
 .done{
-background:#22c55e;
+background:#16a34a;
 color:white;
 }
 
 .delete{
-background:#ef4444;
+background:#dc2626;
+color:white;
+}
+
+.nav{
+margin-bottom:20px;
+}
+
+.nav button{
+background:#2563eb;
 color:white;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<div class="title">Admin Dashboard - Laporan Phishing</div>
+<script>
+
+const token = prompt("Masukkan Admin Token");
+
+if(token !== "admintoken"){
+alert("Token salah");
+location.href="index.html";
+}
+
+</script>
+
+<h1>Admin Dashboard</h1>
+
+<div class="nav">
+<button onclick="location.href='data.html'">User</button>
+<button onclick="location.href='index.html'">Home</button>
+</div>
+
+<div class="card">
 
 <h2>📥 Laporan Pending</h2>
+<div id="pending"></div>
 
-<div id="reports"></div>
+</div>
+
+<div class="card">
+
+<h2>✅ Laporan Selesai</h2>
+<div id="done"></div>
+
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onChildAdded, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+import {
+getDatabase,
+ref,
+onValue,
+update,
+remove
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAG4qda-B8j2k6nOl6krNgRqc7VIDgbPqs",
-  authDomain: "phishing-report-21e2c.firebaseapp.com",
-  databaseURL: "https://phishing-report-21e2c-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "phishing-report-21e2c",
-  storageBucket: "phishing-report-21e2c.firebasestorage.app",
-  messagingSenderId: "276758713826",
-  appId: "1:276758713826:web:945436655ff290283655bb"
+apiKey: "AIzaSyAG4qda-B8j2k6nOl6krNgRqc7VIDgbPqs",
+authDomain: "phishing-report-21e2c.firebaseapp.com",
+databaseURL: "https://phishing-report-21e2c-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "phishing-report-21e2c",
+storageBucket: "phishing-report-21e2c.firebasestorage.app",
+messagingSenderId: "276758713826",
+appId: "1:276758713826:web:945436655ff290283655bb"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -83,53 +120,80 @@ const db = getDatabase(app);
 
 const reportsRef = ref(db,"reports");
 
-onChildAdded(reportsRef,(snapshot)=>{
+const pendingDiv = document.getElementById("pending");
+const doneDiv = document.getElementById("done");
 
-const data = snapshot.val();
-const id = snapshot.key;
+onValue(reportsRef,(snapshot)=>{
 
-if(data.status === "done") return;
+pendingDiv.innerHTML="";
+doneDiv.innerHTML="";
+
+snapshot.forEach(child=>{
+
+const id = child.key;
+const data = child.val();
 
 const div = document.createElement("div");
 
-div.className="card";
+div.className="report";
 
 div.innerHTML = `
 <div>${data.kronologi}</div>
-<div class="time">${data.time}</div>
-
-<button class="done" onclick="selesaikan('${id}')">Tandai Selesai</button>
-
-<button class="delete" onclick="hapus('${id}')">Hapus Laporan</button>
+<small>${data.time}</small>
 `;
 
-document.getElementById("reports").prepend(div);
+if(data.status === "pending"){
 
-});
+const doneBtn = document.createElement("button");
+doneBtn.innerText="Selesaikan";
+doneBtn.className="done";
 
-window.selesaikan = function(id){
+doneBtn.onclick = function(){
 
-const reportRef = ref(db,"reports/"+id);
-
-update(reportRef,{
+update(ref(db,"reports/"+id),{
 status:"done"
 });
 
-alert("Laporan ditandai selesai");
+};
+
+const deleteBtn = document.createElement("button");
+deleteBtn.innerText="Hapus";
+deleteBtn.className="delete";
+
+deleteBtn.onclick = function(){
+
+remove(ref(db,"reports/"+id));
+
+};
+
+div.appendChild(doneBtn);
+div.appendChild(deleteBtn);
+
+pendingDiv.appendChild(div);
 
 }
 
-window.hapus = function(id){
+else{
 
-if(!confirm("Yakin ingin menghapus laporan ini?")) return;
+const deleteBtn = document.createElement("button");
+deleteBtn.innerText="Hapus";
+deleteBtn.className="delete";
 
-const reportRef = ref(db,"reports/"+id);
+deleteBtn.onclick = function(){
 
-remove(reportRef);
+remove(ref(db,"reports/"+id));
 
-alert("Laporan berhasil dihapus");
+};
+
+div.appendChild(deleteBtn);
+
+doneDiv.appendChild(div);
 
 }
+
+});
+
+});
 
 </script>
 
